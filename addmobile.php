@@ -9,15 +9,13 @@ $resultbrand = $objbrand->fillmobilebrand();
 $objstate = new clsdbhelper();
 // Call Fuction to Fill State Dropdown
 $resultstate = $objstate->fillstate();
-?>
 
-<?php
-
+// Post button click event code
 if (isset($_POST) and filter_input(INPUT_SERVER, 'REQUEST_METHOD') == "POST") {
-    // Add Data into Database
     try {
 
-        if (!empty($_POST)) {
+        // Add Data into Database
+        if (isset($_POST['btnpost'])) {
             $username = $_POST['sellername'];
             $useremail = $_POST['emailaddr'];
             $userphone = $_POST['mobnumber'];
@@ -28,9 +26,9 @@ if (isset($_POST) and filter_input(INPUT_SERVER, 'REQUEST_METHOD') == "POST") {
             $posttitle = $_POST['adtitle'];
             $radioVal = $_POST['newused'];
             if ($radioVal == "0") {
-                $condition=0;
+                $condition = 0;
             } else if ($radioVal == "1") {
-                $condition=1;
+                $condition = 1;
             }
             $mprice = $_POST['adprice'];
             $pbrand = $_POST['brands'];
@@ -42,87 +40,77 @@ if (isset($_POST) and filter_input(INPUT_SERVER, 'REQUEST_METHOD') == "POST") {
             $pdescription = $_POST['description'];
             $pios = 'none';
             $pPostdate = date("m/d/Y h:i:s a", time());
-            
+
             $objaddpost = new clsdbhelper();
             $addpostresult = $objaddpost->addnewpost($posttitle, $pdescription, $pbrand, $pmodel, $pios, $pnumsim, $pstate, $pcitiy, $pLocID, $adduserresult, $pPostdate, $condition, $mprice);
-            
-            if($addpostresult >0){
-               echo "<script type=\"text/javascript\">alert('bleh');</script>";
-            }  else {
-            echo "<script type=\"text/javascript\">alert('ohhh no..');</script>";    
+
+            if ($addpostresult > 0) {
+                echo "<script type=\"text/javascript\">alert('bleh');</script>";
+            } else {
+                echo "<script type=\"text/javascript\">alert('ohhh no..');</script>";
             }
-        }
-    } catch (Exception $ex) {
-        
-    }
 
 
 
-    /* Below code is for image upload */
+            /* Below code is for image upload */
 
-    $valid_formats = array("jpg", "png", "gif");
-    $max_file_size = 1024 * 100; //100 kb
-    $mobadsID = $addpostresult;
-    $path = "uploads/$mobadsID/"; // Upload directory
-    $count = 0;
-    //Check if Directory Exists 
-    $exist = is_dir($path);
-    // If directory doesn't exist, create directory
-    if (!$exist) {
-        mkdir("$path");
-        chmod("$path", 0755);
-    } else {
-        echo "Folder already exists";
-    }
+            $valid_formats = array("jpg", "png", "gif");
+            $max_file_size = 1024 * 100; //100 kb
+            $path = "uploads/$addpostresult/"; // Upload directory
+            $count = 0;
+            //Check if Directory Exists
+            $exist = is_dir($path);
+            // If directory doesn't exist, create directory
+            if (!$exist) {
+                mkdir("$path");
+                chmod("$path", 0755);
+            } else {
+                echo "Folder already exists";
+            }
 
 
-    // Loop $_FILES to execute all files
-    foreach ($_FILES['files']['name'] as $f => $name) {
-        if ($_FILES['files']['error'][$f] == 4) {
-            continue; // Skip file if any error found
-        }
-        if ($_FILES['files']['error'][$f] == 0) {
-            if ($_FILES['files']['size'][$f] > $max_file_size) {
-                $message[] = "$name is too large!.";
-                continue; // Skip large files
-            } elseif (!in_array(pathinfo($name, PATHINFO_EXTENSION), $valid_formats)) {
-                $message[] = "$name is not a valid format";
-                continue; // Skip invalid file formats
-            } else { // No error found! Move uploaded files 
-                if (move_uploaded_file($_FILES["files"]["tmp_name"][$f], $path . $name)) {
-                    $count++; // Number of successfully uploaded files
+            // Loop $_FILES to execute all files
+            foreach ($_FILES['files']['name'] as $f => $name) {
+                if ($_FILES['files']['error'][$f] == 4) {
+                    continue; // Skip file if any error found
+                }
+                if ($_FILES['files']['error'][$f] == 0) {
+                    if ($_FILES['files']['size'][$f] > $max_file_size) {
+                        $message[] = "$name is too large!.";
+                        continue; // Skip large files
+                    } elseif (!in_array(pathinfo($name, PATHINFO_EXTENSION), $valid_formats)) {
+                        $message[] = "$name is not a valid format";
+                        continue; // Skip invalid file formats
+                    } else { // No error found! Move uploaded files
+                        if (move_uploaded_file($_FILES["files"]["tmp_name"][$f], $path . $name)) {
+                            $count++; // Number of successfully uploaded files
+                        }
+                    }
                 }
             }
         }
+    } catch (Exception $ex) {
+
     }
 }
-?>
-<?php
 
 //Check Which Dropdown is Selected
-$passkey = explode('=', $_SERVER['QUERY_STRING']) ;
-if ($passkey[0] === 'brandID'){
-    // Object Created of Class clsdbhelper
-    $objmodels= new clsdbhelper();
-    // Variable to get brand ID
-$brandID = $_GET['brandID'];
-// Call Function to Get Data to fill mobile brands
-$resultmodel = $objmodels->fillmobilemodel($brandID);
+$passkey = explode('=', $_SERVER['QUERY_STRING']);
 
- while ($row = $resultmodel->fetch(PDO::FETCH_ASSOC)) {
-                            echo "<option value='" . $row['modelID'] . "'>" . $row['modelname'] . "</option>";
-                        }
-}elseif ($passkey[0] === 'stateID') {
-    // Object Created of Class clsdbhelper
-    $objcities= new clsdbhelper();
-    // Variable to get brand ID
-    $stateID = $_GET['stateID'];
-
-    $resultcity =  $objcities->fillcity($stateID);
-            
-   while ($row = $resultcity->fetch(PDO::FETCH_ASSOC)) {
-                            echo "<option value='" . $row['cityid'] . "'>" . $row['cityname'] . "</option>";
-                        }
+if ($passkey[0] === 'stateID') {
+        $objcities = new clsdbhelper();
+        $stateID = $_GET['stateID'];
+        $resultcity = $objcities->fillcity($stateID);
+        while ($row = $resultcity->fetch(PDO::FETCH_ASSOC)) {
+            echo "<option value='" . $row['cityid'] . "'>" . $row['cityname'] . "</option>";
+        }
+} elseif ($passkey[0] === 'brandID') {
+        $objmodels = new clsdbhelper();
+        $brandID = $_GET['brandID'];
+        $resultmodel = $objmodels->fillmobilemodel($brandID);
+        while ($row = $resultmodel->fetch(PDO::FETCH_ASSOC)) {
+            echo "<option value='" . $row['modelID'] . "'>" . $row['modelname'] . "</option>";
+        }
 }
 ?>
 <!doctype html>
@@ -137,21 +125,13 @@ $resultmodel = $objmodels->fillmobilemodel($brandID);
             $(document).ready(function () {
 
                 $("#brandID").change(function () {
-                    $(this).after('<div id="loader"><img src="img/loading.gif" alt="loading subcategory" /></div>');
-                    $.post('addmobile.php?brandID=' + $(this).val(), function (data) {
+                    $.get('addmobile.php?brandID=' + $(this).val(), function (data) {
                         $("#modelID").html(data);
-                        $('#loader').slideUp(200, function () {
-                            $(this).remove();
-                        });
                     });
                 });
                 $("#stateID").change(function () {
-                    $(this).after('<div id="loader"><img src="img/loading.gif" alt="loading subcategory" /></div>');
-                    $.post('addmobile.php?stateID=' + $(this).val(), function (data) {
-                        $("#cityID").html(data);
-                        $('#loader').slideUp(200, function () {
-                            $(this).remove();
-                        });
+                    $.get('addmobile.php?stateID=' + $(this).val(), function (data1) {
+                        $("#cityID").html(data1);
                     });
                 });
 
@@ -172,7 +152,7 @@ $resultmodel = $objmodels->fillmobilemodel($brandID);
                 </div>
                 <div class="row">
                     <form action="" method="post" enctype="multipart/form-data">
-                        <div class="col-lg-4 col-md-4 col-sm-4 col-xs-12"> 
+                        <div class="col-lg-4 col-md-4 col-sm-4 col-xs-12">
                             <h4>Add Photo</h4>
                         </div>
                         <div class="col-lg-8 col-md-8 col-sm-8 col-xs-12">
@@ -204,12 +184,12 @@ $resultmodel = $objmodels->fillmobilemodel($brandID);
                     </div>
                     <div class="col-lg-8 col-md-8 col-sm-8 col-xs-12">
                         <select name="brands" id="brandID">
-<?php
+                            <?php
 // List fetched data from function
-while ($row = $resultbrand->fetch(PDO::FETCH_ASSOC)) {
-    echo "<option value='" . $row['brandID'] . "'>" . $row['brandname'] . "</option>";
-}
-?>
+                            while ($row = $resultbrand->fetch(PDO::FETCH_ASSOC)) {
+                                echo "<option value='" . $row['brandID'] . "'>" . $row['brandname'] . "</option>";
+                            }
+                            ?>
                         </select>
                     </div>
                 </div>
@@ -220,7 +200,7 @@ while ($row = $resultbrand->fetch(PDO::FETCH_ASSOC)) {
                     <div class="col-lg-8 col-md-8 col-sm-8 col-xs-12">
                         <form method="get">
                             <select name="models" id="modelID">
-                                
+                                <option>-- Select --</option>
                             </select>
                         </form>
                     </div>
@@ -242,12 +222,12 @@ while ($row = $resultbrand->fetch(PDO::FETCH_ASSOC)) {
                     </div>
                     <div class="col-lg-8 col-md-8 col-sm-8 col-xs-12">
                         <select name="states" id="stateID">
-<?php
+                            <?php
 // List fetched data from function
-while ($rowstate = $resultstate->fetch(PDO::FETCH_ASSOC)) {
-    echo "<option value='" . $rowstate['stateid'] . "'>" . $rowstate['statename'] . "</option>";
-}
-?>
+                            while ($rowstate = $resultstate->fetch(PDO::FETCH_ASSOC)) {
+                                echo "<option value='" . $rowstate['stateid'] . "'>" . $rowstate['statename'] . "</option>";
+                            }
+                            ?>
                         </select>
                     </div>
                 </div>
@@ -258,7 +238,7 @@ while ($rowstate = $resultstate->fetch(PDO::FETCH_ASSOC)) {
                     <div class="col-lg-8 col-md-8 col-sm-8 col-xs-12">
                         <form method="get">
                             <select name="cities" id="cityID">
-                                
+                                <option>-- Select --</option>
                             </select>
                         </form>
                     </div>
@@ -300,10 +280,10 @@ while ($rowstate = $resultstate->fetch(PDO::FETCH_ASSOC)) {
                 </div>
                 <div class="row">
                     <input type="checkbox" title="">Send me abc Email/SMS Alerts for people looking to buy mobile handsets in  Www
-                    By clicking "Post", you agree to our Terms of Use & Privacy Policy. 
+                    By clicking "Post", you agree to our Terms of Use & Privacy Policy.
                 </div>
                 <div class="row">
-                    <input type="submit" value="Post">
+                    <input type="submit" value="Post" name="btnpost">
 
                 </div>
             </div>
